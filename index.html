@@ -1,0 +1,175 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="theme-color" content="#dca7ff">
+<meta name="description" content="A tiny heart-catching game.">
+<title>A Tiny Game For You 🎁</title>
+<style>
+:root{
+  --pink:#ff7eb3; --purple:#a78bfa; --blue:#8ed8ff;
+  --ink:#3f3651; --muted:#71677e; --glass:rgba(255,255,255,.48);
+}
+*{box-sizing:border-box}
+html,body{margin:0;min-height:100%;font-family:Inter,ui-sans-serif,system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;color:var(--ink)}
+body{
+  min-height:100svh; overflow-x:hidden;
+  background:linear-gradient(135deg,#ffd7e8 0%,#dfc8ff 48%,#bcecff 100%);
+  display:flex;align-items:center;justify-content:center;padding:20px;
+}
+body:before{
+  content:"";position:fixed;inset:-30%;
+  background:
+    radial-gradient(circle at 20% 30%,rgba(255,255,255,.55),transparent 25%),
+    radial-gradient(circle at 80% 70%,rgba(255,255,255,.42),transparent 27%);
+  filter:blur(20px);pointer-events:none;
+}
+.wrap{width:min(100%,480px);position:relative;z-index:1}
+.card{
+  border:1px solid rgba(255,255,255,.7);
+  background:var(--glass);backdrop-filter:blur(22px);-webkit-backdrop-filter:blur(22px);
+  border-radius:30px;padding:28px;box-shadow:0 24px 70px rgba(92,67,115,.20);
+}
+.screen{display:none;animation:in .45s ease both}.screen.active{display:block}
+h1{font-size:clamp(31px,8vw,42px);line-height:1.05;margin:4px 0 12px;letter-spacing:-1.5px}
+h2{margin:0 0 10px;font-size:28px}
+p{line-height:1.55}
+.sub{color:var(--muted);margin:0 auto 25px;max-width:360px}
+button{
+  width:100%;border:0;border-radius:17px;padding:16px 18px;font-weight:800;
+  letter-spacing:.4px;font-size:15px;color:white;cursor:pointer;
+  background:linear-gradient(100deg,#ff78aa,#a879f4);box-shadow:0 10px 25px rgba(167,121,244,.28);
+  transition:transform .16s ease,box-shadow .16s ease;
+}
+button:active{transform:scale(.97)}
+button.secondary{margin-top:12px;background:rgba(255,255,255,.7);color:#5a5066;box-shadow:none}
+.emoji{font-size:48px;filter:drop-shadow(0 8px 15px rgba(255,110,160,.22))}
+.stats{display:grid;grid-template-columns:repeat(3,1fr);gap:9px;margin-bottom:13px}
+.stat{background:rgba(255,255,255,.55);border:1px solid rgba(255,255,255,.65);border-radius:15px;padding:10px;text-align:center}
+.stat b{display:block;font-size:21px}.stat span{font-size:11px;color:var(--muted)}
+#gameArea{
+  height:min(62svh,390px);min-height:290px;position:relative;overflow:hidden;border-radius:24px;
+  background:linear-gradient(145deg,rgba(255,255,255,.34),rgba(255,255,255,.16));
+  border:1px solid rgba(255,255,255,.65);touch-action:manipulation;
+}
+#heart{
+  position:absolute;width:58px;height:58px;border:0;padding:0;background:transparent;box-shadow:none;
+  font-size:46px;line-height:1;display:none;transform:translate(-50%,-50%);
+  filter:drop-shadow(0 8px 10px rgba(255,82,145,.25));z-index:2;
+}
+#heart.show{display:block;animation:pop .22s ease both}
+.hint{text-align:center;color:var(--muted);font-size:12px;margin:10px 0 0}
+.result{text-align:center}
+.quote{
+  margin:18px 0;padding:20px;border-radius:20px;background:rgba(255,255,255,.48);
+  border:1px solid rgba(255,255,255,.7);font-size:17px;line-height:1.55;
+}
+.note{font-size:13px;color:var(--muted)}
+.floating{position:fixed;inset:0;pointer-events:none;overflow:hidden}
+.float{position:absolute;opacity:.28;animation:drift linear infinite}
+@keyframes in{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:none}}
+@keyframes pop{0%{opacity:0;transform:translate(-50%,-50%) scale(.55) rotate(-10deg)}70%{transform:translate(-50%,-50%) scale(1.15) rotate(5deg)}100%{opacity:1;transform:translate(-50%,-50%) scale(1)}}
+@keyframes drift{from{transform:translateY(110vh) rotate(0deg)}to{transform:translateY(-15vh) rotate(180deg)}}
+@media(max-width:380px){.card{padding:22px;border-radius:25px}h1{font-size:30px}#gameArea{min-height:270px}}
+</style>
+</head>
+<body>
+<div class="floating" aria-hidden="true">
+  <span class="float" style="left:8%;font-size:22px;animation-duration:14s;animation-delay:-4s">♡</span>
+  <span class="float" style="left:24%;font-size:16px;animation-duration:18s;animation-delay:-12s">✦</span>
+  <span class="float" style="left:48%;font-size:24px;animation-duration:16s;animation-delay:-8s">♡</span>
+  <span class="float" style="left:72%;font-size:18px;animation-duration:20s;animation-delay:-16s">✧</span>
+  <span class="float" style="left:88%;font-size:26px;animation-duration:15s;animation-delay:-6s">♡</span>
+</div>
+
+<main class="wrap">
+<section id="home" class="card screen active">
+  <div class="emoji">🎁</div>
+  <h1>A Tiny Game For You 🎁</h1>
+  <p class="sub">Catch the hearts and unlock a little surprise 👀</p>
+  <button id="startBtn">START GAME 💗</button>
+</section>
+
+<section id="game" class="card screen">
+  <div class="stats">
+    <div class="stat"><b id="score">0</b><span>SCORE</span></div>
+    <div class="stat"><b id="time">20</b><span>TIME</span></div>
+    <div class="stat"><b id="lives">3</b><span>LIVES</span></div>
+  </div>
+  <div id="gameArea" aria-label="Heart catching game">
+    <button id="heart" aria-label="Catch the heart">❤️</button>
+  </div>
+  <p class="hint">Tap the heart before it moves 💫</p>
+</section>
+
+<section id="result" class="card screen result">
+  <div class="emoji" id="resultEmoji">✨</div>
+  <h2 id="resultTitle">Game Over</h2>
+  <p id="resultScore"></p>
+  <div id="secret"></div>
+  <button id="restartBtn">↻ RESTART</button>
+</section>
+</main>
+
+<script>
+(() => {
+  const screens = {home:document.querySelector('#home'),game:document.querySelector('#game'),result:document.querySelector('#result')};
+  const scoreEl=document.querySelector('#score'), timeEl=document.querySelector('#time'), livesEl=document.querySelector('#lives');
+  const area=document.querySelector('#gameArea'), heart=document.querySelector('#heart');
+  const resultTitle=document.querySelector('#resultTitle'), resultScore=document.querySelector('#resultScore');
+  const secret=document.querySelector('#secret'), resultEmoji=document.querySelector('#resultEmoji');
+  let score=0,lives=3,time=20,timer=null,playing=false,missTimer=null;
+
+  function show(name){Object.values(screens).forEach(s=>s.classList.remove('active'));screens[name].classList.add('active')}
+  function update(){scoreEl.textContent=score;timeEl.textContent=time;livesEl.textContent=lives}
+  function placeHeart(){
+    if(!playing)return;
+    const pad=38, x=pad+Math.random()*(area.clientWidth-pad*2), y=pad+Math.random()*(area.clientHeight-pad*2);
+    heart.style.left=x+'px';heart.style.top=y+'px';heart.classList.remove('show');void heart.offsetWidth;heart.classList.add('show');
+  }
+  function end(){
+    playing=false;clearInterval(timer);clearTimeout(missTimer);heart.classList.remove('show');
+    resultScore.innerHTML=`You caught <strong>${score}</strong> heart${score===1?'':'s'} 💗`;
+    if(score>=7){
+      resultEmoji.textContent='💖';resultTitle.textContent='Wish Unlocked!';
+      secret.innerHTML=`<div class="quote">“The moon has its own glow, but somehow your smile makes it look a little less special. 🌙✨”</div><div class="note">No pressure, just a little compliment from your online friend 💗</div>`;
+    }else{
+      resultEmoji.textContent='✨';resultTitle.textContent='Almost there! 😄';
+      secret.innerHTML=`<p class="note"><strong>7 points unlock the little secret 👀💗</strong></p>`;
+    }
+    show('result');
+  }
+  function scheduleMiss(){
+    clearTimeout(missTimer);
+    // A miss is registered when the player hasn't tapped the current heart in time.
+    missTimer=setTimeout(()=>{
+      if(!playing)return;
+      lives--;update();
+      if(lives<=0){end();return}
+      placeHeart();scheduleMiss();
+    },2800);
+  }
+  function start(){
+    score=0;lives=3;time=20;playing=true;update();show('game');
+    setTimeout(()=>{placeHeart();scheduleMiss()},60);
+    clearInterval(timer);
+    timer=setInterval(()=>{time--;update();if(time<=0)end()},1000);
+  }
+  heart.addEventListener('click',(e)=>{
+    e.stopPropagation(); if(!playing)return;
+    score++;update();clearTimeout(missTimer);
+    heart.classList.remove('show');setTimeout(()=>{placeHeart();scheduleMiss()},90);
+  });
+  area.addEventListener('click',(e)=>{
+    if(!playing || e.target===heart)return;
+    // Tapping empty space counts as a miss.
+    lives--;update();
+    if(lives<=0)end(); else {placeHeart();scheduleMiss()}
+  });
+  document.querySelector('#startBtn').addEventListener('click',start);
+  document.querySelector('#restartBtn').addEventListener('click',start);
+})();
+</script>
+</body>
+</html>
